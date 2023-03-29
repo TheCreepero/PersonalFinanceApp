@@ -86,12 +86,25 @@ namespace Site.Controllers
                 return NotFound();
             }
 
-            var transaction = await _context.Transaction.FindAsync(id);
+            var transaction = await _context.Transaction
+                .Include(t => t.TransactionFor)
+                .FirstOrDefaultAsync(t => t.TransactionId == id);
             if (transaction == null)
             {
                 return NotFound();
             }
-            return View(transaction);
+
+            var accounts = _context.Account.ToList();
+            var model = new TransactionViewModel
+            {
+                Accounts = accounts,
+                TransactionAmount = transaction.TransactionAmount,
+                TransactionType = transaction.TransactionType,
+                TransactionDate = transaction.TransactionDate,
+                TransactionId = transaction.TransactionId
+            };
+
+            return View(model);
         }
 
         // POST: Transactions/Edit/5
@@ -99,23 +112,31 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("TransactionId,TransactionType,TransactionAmount")] Transaction transaction)
+        public async Task<IActionResult> Edit(string id, TransactionViewModel transaction)
         {
             if (id != transaction.TransactionId)
             {
                 return NotFound();
             }
 
+            var model = new Transaction
+            {
+                TransactionAmount = transaction.TransactionAmount,
+                TransactionType = transaction.TransactionType,
+                TransactionDate = transaction.TransactionDate,
+                TransactionId = transaction.TransactionId
+            };
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(transaction);
+                    _context.Update(model);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TransactionExists(transaction.TransactionId))
+                    if (!TransactionExists(model.TransactionId))
                     {
                         return NotFound();
                     }

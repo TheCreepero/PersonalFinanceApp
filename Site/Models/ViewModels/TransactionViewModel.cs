@@ -23,5 +23,7 @@ namespace Site.Models.ViewModels
         public List<Account> Accounts { get; set; } = new List<Account>();
 
         public DateTime TransactionDate { get; set; }
+
+        public string TransactionId { get; set; }
     }
 }
