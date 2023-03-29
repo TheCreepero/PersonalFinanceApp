@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Site.Data;
 using Site.Models;
+using Site.Models.ViewModels;
 
 namespace Site.Controllers
 {
@@ -22,9 +18,11 @@ namespace Site.Controllers
         // GET: Transactions
         public async Task<IActionResult> Index()
         {
-              return _context.Transaction != null ? 
-                          View(await _context.Transaction.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Transaction'  is null.");
+            return _context.Transaction != null ?
+                        View(await _context.Transaction
+                        .Include(t => t.TransactionFor)
+                        .ToListAsync()) :
+                        Problem("Entity set 'ApplicationDbContext.Transaction'  is null.");
         }
 
         // GET: Transactions/Details/5
@@ -48,7 +46,12 @@ namespace Site.Controllers
         // GET: Transactions/Create
         public IActionResult Create()
         {
-            return View();
+            var accounts = _context.Account.ToList();
+            var model = new TransactionViewModel
+            {
+                Accounts = accounts
+            };
+            return View(model);
         }
 
         // POST: Transactions/Create
@@ -56,11 +59,19 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TransactionId,TransactionType,TransactionAmount")] Transaction transaction)
+        public async Task<IActionResult> Create(TransactionViewModel transaction)
         {
+            var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.SelectedAccount);
+            var model = new Transaction {
+                TransactionAmount = transaction.TransactionAmount,
+                TransactionType = transaction.TransactionType,
+                TransactionFor = account,
+                TransactionDate = DateTime.Now
+            };
+
             if (ModelState.IsValid)
             {
-                _context.Add(transaction);
+                _context.Add(model);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -150,14 +161,14 @@ namespace Site.Controllers
             {
                 _context.Transaction.Remove(transaction);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool TransactionExists(string id)
         {
-          return (_context.Transaction?.Any(e => e.TransactionId == id)).GetValueOrDefault();
+            return (_context.Transaction?.Any(e => e.TransactionId == id)).GetValueOrDefault();
         }
     }
 }

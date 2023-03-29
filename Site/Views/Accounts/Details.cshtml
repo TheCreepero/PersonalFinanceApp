@@ -24,6 +24,39 @@
             @Html.DisplayFor(model => model.AccountBalance)
         </dd>
     </dl>
+    @if (Model.Transactions.Count() != 0)
+    {
+        <table class="table">
+            <thead>
+                <th>
+                    Type
+                </th>
+                <th>
+                    Amount
+                </th>
+            </thead>
+            @foreach (var item in Model.Transactions)
+            {
+                <tbody>
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(model => item.TransactionType)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(model => item.TransactionAmount)
+                        </td>
+                        @*		<td>
+                @Html.ActionLink ("Edit", "Edit", new { id = item.transID }) ||
+                @Html.ActionLink ("Details", "Details", new { id = item.transID }) ||
+                @Html.ActionLink ("Delete", "Delete", new { id = item.transID })
+                </td>*@
+                    </tr>
+                </tbody>
+
+            }
+        </table>        
+    }   
+
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.AccountId">Edit</a> |

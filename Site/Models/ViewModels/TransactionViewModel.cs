@@ -1,14 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Site.Models
+namespace Site.Models.ViewModels
 {
-    public class Transaction
+    public class TransactionViewModel
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string TransactionId { get; set; }
-
         [Required]
         [Display(
             Name = "Transaction Type",
@@ -23,12 +18,9 @@ namespace Site.Models
             Order = 1)]
         public decimal TransactionAmount { get; set; }
 
-        [Required]
-        [Display(
-            Name = "Account",
-            Description = "Account the transaction was made to/from.",
-            Order = 1)]
-        public Account TransactionFor { get; set; }
+        public int SelectedAccount { get; set; }
+
+        public List<Account> Accounts { get; set; } = new List<Account>();
 
         public DateTime TransactionDate { get; set; }
     }

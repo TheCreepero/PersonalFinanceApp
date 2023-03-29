@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Site.Data;
 
@@ -21,9 +16,9 @@ namespace Site.Controllers
         // GET: Accounts
         public async Task<IActionResult> Index()
         {
-              return _context.Account != null ? 
-                          View(await _context.Account.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Account'  is null.");
+            return _context.Account != null ?
+                        View(await _context.Account.ToListAsync()) :
+                        Problem("Entity set 'ApplicationDbContext.Account'  is null.");
         }
 
         // GET: Accounts/Details/5
@@ -35,6 +30,7 @@ namespace Site.Controllers
             }
 
             var account = await _context.Account
+                .Include(t => t.Transactions)
                 .FirstOrDefaultAsync(m => m.AccountId == id);
             if (account == null)
             {
@@ -55,7 +51,7 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AccountId,AccountName,Accountbalance")] Account account)
+        public async Task<IActionResult> Create([Bind("AccountId,AccountName,AccountBalance")] Account account)
         {
             if (ModelState.IsValid)
             {
@@ -149,14 +145,14 @@ namespace Site.Controllers
             {
                 _context.Account.Remove(account);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool AccountExists(int id)
         {
-          return (_context.Account?.Any(e => e.AccountId == id)).GetValueOrDefault();
+            return (_context.Account?.Any(e => e.AccountId == id)).GetValueOrDefault();
         }
     }
 }

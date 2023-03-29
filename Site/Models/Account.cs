@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Site.Models;
+using System.ComponentModel.DataAnnotations;
 
 public class Account
 {
@@ -18,4 +19,6 @@ public class Account
         Description = "Total balance of the bank account.",
         Order = 20)]
     public double AccountBalance { get; set; }
+
+    public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 }
