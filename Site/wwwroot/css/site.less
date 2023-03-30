@@ -21,7 +21,7 @@ header {
 
 body {
     margin-bottom: 60px;
-    background-color: @background-light-cream;
+    background-color: @background-softGray;
 }
 
 .flex-grid {
@@ -31,13 +31,28 @@ body {
     padding: 20px 0;
     justify-content: center;
 
+    @media @mobile {
+        flex-direction: column;
+    }
+
     .grid-item {
         width: 20%;
-        height: 100px;
+        height: 150px;
         border: 2px solid @colorBlack;
+        border-radius: 10px;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
+
+        @media @mobile{
+            width: 75%;
+            margin: auto;
+        }
+    }
+    .button-text {
+        font-size: 18px;
+        font-weight: 700;
     }
 
     .dusty-blue {
@@ -65,4 +80,17 @@ table {
     tr  {
         vertical-align: middle;
     }
+}
+
+@media @mobile {
+    h1 {
+        text-align: center;
+    }
+    .btn-container {
+        text-align: center;
+        margin: 10px 0 0;
+        .btn {
+            width: 90%;
+        }
+    }  
 }

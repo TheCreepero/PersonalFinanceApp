@@ -15,7 +15,7 @@ header {
 }
 body {
   margin-bottom: 60px;
-  background-color: #F7F6F2;
+  background-color: #F5F5F5;
 }
 .flex-grid {
   display: flex;
@@ -24,13 +24,30 @@ body {
   padding: 20px 0;
   justify-content: center;
 }
+@media screen and (max-width: 700px) {
+  .flex-grid {
+    flex-direction: column;
+  }
+}
 .flex-grid .grid-item {
   width: 20%;
-  height: 100px;
+  height: 150px;
   border: 2px solid #000;
+  border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+}
+@media screen and (max-width: 700px) {
+  .flex-grid .grid-item {
+    width: 75%;
+    margin: auto;
+  }
+}
+.flex-grid .button-text {
+  font-size: 18px;
+  font-weight: 700;
 }
 .flex-grid .dusty-blue {
   background-color: #7A9CAE;
@@ -49,4 +66,16 @@ body {
 }
 table tr {
   vertical-align: middle;
+}
+@media screen and (max-width: 700px) {
+  h1 {
+    text-align: center;
+  }
+  .btn-container {
+    text-align: center;
+    margin: 10px 0 0;
+  }
+  .btn-container .btn {
+    width: 90%;
+  }
 }

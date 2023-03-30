@@ -7,10 +7,21 @@
 
 <h1>Accounts</h1>
 
-<p>
+<p class="btn-container">
     <a class="btn btn-primary" asp-action="Create">Add New</a>
 </p>
-<table class="table">
+
+<div class="flex-grid border-top">
+    @foreach (var account in Model)
+    {
+        <div class="grid-item pale-lavender">
+            <a class="text-dark btn button-text" asp-action="Details" asp-route-id="@account.AccountId">@account.AccountName</a>
+            <p>@account.AccountBalance €</p>
+        </div>
+    }
+</div>
+
+@*<table class="table">
     <thead>
         <tr>
             <th>
@@ -39,4 +50,4 @@
         </tr>
 }
     </tbody>
-</table>
+</table>*@

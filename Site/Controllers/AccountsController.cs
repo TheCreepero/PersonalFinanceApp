@@ -57,8 +57,9 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AccountId,AccountName,AccountBalance")] Account account)
+        public async Task<IActionResult> Create([Bind("AccountId,AccountName")] Account account)
         {
+            account.AccountBalance = 0;
             if (ModelState.IsValid)
             {
                 _context.Add(account);
