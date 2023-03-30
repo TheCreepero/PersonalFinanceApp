@@ -47,3 +47,6 @@ body {
 .flex-grid .pale-lavender {
   background-color: #C4B4D0;
 }
+table tr {
+  vertical-align: middle;
+}

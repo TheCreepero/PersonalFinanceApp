@@ -18,7 +18,7 @@ public class Account
         Name = "Balance",
         Description = "Total balance of the bank account.",
         Order = 20)]
-    public double AccountBalance { get; set; }
+    public decimal AccountBalance { get; set; }
 
     public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

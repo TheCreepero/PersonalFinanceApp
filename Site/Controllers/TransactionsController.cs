@@ -3,26 +3,44 @@ using Microsoft.EntityFrameworkCore;
 using Site.Data;
 using Site.Models;
 using Site.Models.ViewModels;
+using System.Globalization;
+using Site.Controllers;
+using Site.Utility;
+using System.Security.Principal;
 
 namespace Site.Controllers
 {
     public class TransactionsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AccountService _accountService;
 
-        public TransactionsController(ApplicationDbContext context)
+        private CultureInfo culture = new CultureInfo("fi-FI");
+
+        public TransactionsController(ApplicationDbContext context, AccountService accountService)
         {
             _context = context;
+            _accountService = accountService;
         }
 
         // GET: Transactions
         public async Task<IActionResult> Index()
         {
-            return _context.Transaction != null ?
-                        View(await _context.Transaction
-                        .Include(t => t.TransactionFor)
-                        .ToListAsync()) :
-                        Problem("Entity set 'ApplicationDbContext.Transaction'  is null.");
+            var transactionsList = await _context.Transaction
+                .Join(_context.Account,
+                    transaction => transaction.AccountId,
+                    account => account.AccountId,
+                    (transaction, account) => new IndexTransactionViewModel
+                    {
+                        TransactionType = transaction.TransactionType,
+                        TransactionAmount = transaction.TransactionAmount,
+                        TransactionDate = transaction.TransactionDate,
+                        TransactionId = transaction.TransactionId,
+                        AccountName = account.AccountName
+                    })
+                .ToListAsync();
+
+            return View(transactionsList);
         }
 
         // GET: Transactions/Details/5
@@ -47,7 +65,7 @@ namespace Site.Controllers
         public IActionResult Create()
         {
             var accounts = _context.Account.ToList();
-            var model = new TransactionViewModel
+            var model = new CreateTransactionViewModel
             {
                 Accounts = accounts
             };
@@ -59,22 +77,32 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(TransactionViewModel transaction)
+        public async Task<IActionResult> Create(CreateTransactionViewModel transaction)
         {
             var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.SelectedAccount);
-            var model = new Transaction {
-                TransactionAmount = transaction.TransactionAmount,
-                TransactionType = transaction.TransactionType,
-                TransactionFor = account,
-                TransactionDate = DateTime.Now
-            };
 
-            if (ModelState.IsValid)
+            decimal transactionAmount;
+
+            if (decimal.TryParse(transaction.TransactionAmount.Replace('.', ','), NumberStyles.Any, culture, out transactionAmount))
             {
-                _context.Add(model);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var model = new Transaction
+                {
+                    TransactionAmount = transactionAmount,
+                    TransactionType = transaction.TransactionType,
+                    AccountId = transaction.SelectedAccount,
+                    TransactionDate = DateTime.Now
+                };
+
+                bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
+
+                if (ModelState.IsValid && balanceUpdated)
+                {
+                    _context.Add(model);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
+
             return View(transaction);
         }
 
@@ -87,7 +115,6 @@ namespace Site.Controllers
             }
 
             var transaction = await _context.Transaction
-                .Include(t => t.TransactionFor)
                 .FirstOrDefaultAsync(t => t.TransactionId == id);
             if (transaction == null)
             {
@@ -98,7 +125,7 @@ namespace Site.Controllers
             var model = new TransactionViewModel
             {
                 Accounts = accounts,
-                TransactionAmount = transaction.TransactionAmount,
+                TransactionAmount = transaction.TransactionAmount.ToString(),
                 TransactionType = transaction.TransactionType,
                 TransactionDate = transaction.TransactionDate,
                 TransactionId = transaction.TransactionId
@@ -118,34 +145,41 @@ namespace Site.Controllers
             {
                 return NotFound();
             }
+            var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.SelectedAccount);
 
-            var model = new Transaction
+            decimal transactionAmount;
+            if (decimal.TryParse(transaction.TransactionAmount.Replace('.', ','), NumberStyles.Any, culture, out transactionAmount))
             {
-                TransactionAmount = transaction.TransactionAmount,
-                TransactionType = transaction.TransactionType,
-                TransactionDate = transaction.TransactionDate,
-                TransactionId = transaction.TransactionId
-            };
+                var model = new Transaction
+                {
+                    TransactionAmount = transactionAmount,
+                    TransactionType = transaction.TransactionType,
+                    TransactionDate = transaction.TransactionDate,
+                    TransactionId = transaction.TransactionId
+                };
 
-            if (ModelState.IsValid)
-            {
-                try
+                bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
+
+                if (ModelState.IsValid && balanceUpdated)
                 {
-                    _context.Update(model);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TransactionExists(model.TransactionId))
+                    try
                     {
-                        return NotFound();
+                        _context.Update(model);
+                        await _context.SaveChangesAsync();
                     }
-                    else
+                    catch (DbUpdateConcurrencyException)
                     {
-                        throw;
+                        if (!TransactionExists(model.TransactionId))
+                        {
+                            return NotFound();
+                        }
+                        else
+                        {
+                            throw;
+                        }
                     }
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(transaction);
         }
@@ -180,7 +214,14 @@ namespace Site.Controllers
             var transaction = await _context.Transaction.FindAsync(id);
             if (transaction != null)
             {
-                _context.Transaction.Remove(transaction);
+                var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.AccountId);
+
+                bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transaction.TransactionAmount);
+
+                if (balanceUpdated)
+                {
+                    _context.Transaction.Remove(transaction);
+                }
             }
 
             await _context.SaveChangesAsync();

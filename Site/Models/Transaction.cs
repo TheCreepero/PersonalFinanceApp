@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Site.Models
@@ -17,10 +18,12 @@ namespace Site.Models
         public string TransactionType { get; set; }
 
         [Required]
+        [DataType(DataType.Currency)]
         [Display(
             Name = "Amount",
             Description = "Amount of the transaction.",
             Order = 1)]
+        [Precision(18, 2)]
         public decimal TransactionAmount { get; set; }
 
         [Required]
@@ -28,7 +31,7 @@ namespace Site.Models
             Name = "Account",
             Description = "Account the transaction was made to/from.",
             Order = 1)]
-        public Account TransactionFor { get; set; }
+        public int AccountId { get; set; }
 
         public DateTime TransactionDate { get; set; }
     }

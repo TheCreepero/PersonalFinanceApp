@@ -1,21 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Site.Data;
+using Site.Utility;
 
 namespace Site.Controllers
 {
     public class AccountsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AccountService _accountService;
 
-        public AccountsController(ApplicationDbContext context)
+        public AccountsController(ApplicationDbContext context, AccountService accountService)
         {
             _context = context;
+            _accountService = accountService;
         }
 
         // GET: Accounts
         public async Task<IActionResult> Index()
         {
+            var accountService = new AccountService(_context);
+            await accountService.CalculateAccountBalance();
+
             return _context.Account != null ?
                         View(await _context.Account.ToListAsync()) :
                         Problem("Entity set 'ApplicationDbContext.Account'  is null.");
