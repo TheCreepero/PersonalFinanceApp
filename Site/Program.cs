@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Site.Data;
+using Site.Models;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Configuration.AddJsonFile("siteSettings.json", true, reloadOnChange: true);
+builder.Services.Configure<SiteSettings>(builder.Configuration);
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -29,6 +33,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddScoped<Site.Utility.AccountService>();
 builder.Services.AddControllersWithViews();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

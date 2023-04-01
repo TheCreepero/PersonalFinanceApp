@@ -1,49 +1,49 @@
-﻿@model Site.Models.Month
+﻿@model Site.Models.ViewModels.MonthTransactionViewModel
 
-@{
-    ViewData["Title"] = "Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+<h1>@Model.Month.ToString("MMMM yyyy")</h1>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Account Name</th>
+        <th>Beginning Balance</th>
+        <th>Total Spent</th>
+        <th>Ending Balance</th>
+    </tr>
+    @foreach (var item in Model.SummaryTable)
+    {
+        <tr>
+            <td>@item.AccountName</td>
+            <td>@item.BeginningBalance</td>
+            <td>@item.TotalSpent</td>
+            <td>@item.EndingBalance</td>
+        </tr>
+    }
+</table>
+
+@foreach (var account in Model.Transactions.GroupBy(t => t.AccountId))
+{
+    <h2>@Model.AccountNames[account.Key]</h2>
+    <table class="table">
+        <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Running Balance</th>
+        </tr>
+        @{
+            decimal runningBalance = Model.AccountBalances[account.Key];
+        }
+        @foreach (var transaction in account.OrderBy(t => t.Date))
+        {
+            <tr>
+                <td>@transaction.Date.ToShortDateString()</td>
+                <td>@transaction.TransactionType</td>
+                <td>@transaction.TransactionAmount</td>
+                @{
+                    runningBalance += transaction.TransactionAmount;
+                }
+                <td>@runningBalance</td>
+            </tr>
+        }
+    </table>
 }
-
-<h1>Details</h1>
-
-<div>
-    <h4>Month</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MonthName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MonthName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EndDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EndDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartBalance)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartBalance)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EndBalance)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EndBalance)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.MonthId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>

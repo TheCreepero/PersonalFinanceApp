@@ -16,7 +16,7 @@
     {
         <div class="grid-item pale-lavender">
             <a class="text-dark btn button-text" asp-action="Details" asp-route-id="@account.AccountId">@account.AccountName</a>
-            <p>@account.AccountBalance €</p>
+            <p>@account.AccountBalance @ViewData["CurrencySymbol"]</p>
         </div>
     }
 </div>

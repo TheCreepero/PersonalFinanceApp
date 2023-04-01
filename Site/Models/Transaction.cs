@@ -33,6 +33,6 @@ namespace Site.Models
             Order = 1)]
         public int AccountId { get; set; }
 
-        public DateTime TransactionDate { get; set; }
+        public DateTime Date { get; set; }
     }
 }

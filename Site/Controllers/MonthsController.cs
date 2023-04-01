@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Site.Data;
 using Site.Models;
+using Site.Models.ViewModels;
 
 namespace Site.Controllers
 {
@@ -22,27 +24,68 @@ namespace Site.Controllers
         // GET: Months
         public async Task<IActionResult> Index()
         {
-              return _context.Month != null ? 
-                          View(await _context.Month.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Month'  is null.");
+            return _context.Month != null ?
+                        View(await _context.Month.ToListAsync()) :
+                        Problem("Entity set 'ApplicationDbContext.Month'  is null.");
         }
 
         // GET: Months/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int year, int month)
         {
-            if (id == null || _context.Month == null)
+            var monthDate = new DateTime(year, month, 1);
+
+            var transactions = _context.Transaction
+                .Where(t => t.Date.Year == year && t.Date.Month == month)
+                .OrderBy(t => t.Date)
+                .ToList();
+
+            // Load the related Account entities explicitly
+            var accountIds = transactions.Select(t => t.AccountId).Distinct();
+            var accounts = _context.Account
+                .Where(a => accountIds.Contains(a.AccountId))
+                .ToList();
+
+            var transactionDetails = transactions
+                .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
+                {
+                    Transaction = t,
+                    Account = a
+                })
+                .ToList();
+
+            // Calculate the account balances for the specified month
+            var accountBalances = accounts.ToDictionary(a => a.AccountId, a => a.AccountBalance);
+
+            var summaryTable = transactionDetails
+                .GroupBy(td => td.Transaction.AccountId)
+                .Select(g => new AccountSummary
+                {
+                    AccountName = g.First().Account.AccountName,
+                    BeginningBalance = accountBalances[g.Key] + g.Where(td => td.Transaction.Date < monthDate).Sum(td => td.Transaction.TransactionAmount),
+                    EndingBalance = accountBalances[g.Key] + g.Where(td => td.Transaction.Date <= monthDate.AddMonths(1).AddDays(-1)).Sum(td => td.Transaction.TransactionAmount),
+                    TotalSpent = g.Where(td => td.Transaction.TransactionAmount < 0).Sum(td => td.Transaction.TransactionAmount) * -1
+                })
+                .ToList();
+
+            //var accountBalances = _context.Account.Where(a => accountIds.Contains(a.AccountId)).ToDictionary(a => a.AccountId, a => a.AccountBalance);
+
+            var accountNames = _context.Account.Where(a => accountIds.Contains(a.AccountId)).ToDictionary(a => a.AccountId, a => a.AccountName);
+
+            foreach (var transaction in transactions)
             {
-                return NotFound();
+                accountBalances[transaction.AccountId] += transaction.TransactionAmount;
             }
 
-            var month = await _context.Month
-                .FirstOrDefaultAsync(m => m.MonthId == id);
-            if (month == null)
+            var viewModel = new MonthTransactionViewModel
             {
-                return NotFound();
-            }
+                Month = monthDate,
+                Transactions = transactions,
+                SummaryTable = summaryTable,
+                AccountBalances = accountBalances,
+                AccountNames = accountNames
+            };
 
-            return View(month);
+            return View(viewModel);
         }
 
         // GET: Months/Create
@@ -150,14 +193,14 @@ namespace Site.Controllers
             {
                 _context.Month.Remove(month);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool MonthExists(int id)
         {
-          return (_context.Month?.Any(e => e.MonthId == id)).GetValueOrDefault();
+            return (_context.Month?.Any(e => e.MonthId == id)).GetValueOrDefault();
         }
     }
 }

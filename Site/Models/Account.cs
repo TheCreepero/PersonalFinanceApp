@@ -21,4 +21,6 @@ public class Account
     public decimal AccountBalance { get; set; }
 
     public List<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public bool IsMain { get; set; }
 }

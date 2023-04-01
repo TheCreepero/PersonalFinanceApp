@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Site.Data;
+using Site.Models;
 using Site.Utility;
 
 namespace Site.Controllers
@@ -9,11 +11,13 @@ namespace Site.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly AccountService _accountService;
+        private readonly SiteSettings _siteSettings;
 
-        public AccountsController(ApplicationDbContext context, AccountService accountService)
+        public AccountsController(ApplicationDbContext context, AccountService accountService, IOptions<SiteSettings> siteSettings)
         {
             _context = context;
             _accountService = accountService;
+            _siteSettings = siteSettings.Value;
         }
 
         // GET: Accounts
@@ -21,6 +25,8 @@ namespace Site.Controllers
         {
             var accountService = new AccountService(_context);
             await accountService.CalculateAccountBalance();
+
+            ViewData["CurrencySymbol"] = _siteSettings.CurrencySymbol;
 
             return _context.Account != null ?
                         View(await _context.Account.ToListAsync()) :
@@ -57,7 +63,7 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AccountId,AccountName")] Account account)
+        public async Task<IActionResult> Create([Bind("AccountId,AccountName,IsMain")] Account account)
         {
             account.AccountBalance = 0;
             if (ModelState.IsValid)
@@ -90,7 +96,7 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AccountId,AccountName,Accountbalance")] Account account)
+        public async Task<IActionResult> Edit(int id, [Bind("AccountId,AccountName,AccountBalance,IsMain")] Account account)
         {
             if (id != account.AccountId)
             {

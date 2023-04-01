@@ -34,7 +34,7 @@ namespace Site.Controllers
                     {
                         TransactionType = transaction.TransactionType,
                         TransactionAmount = transaction.TransactionAmount,
-                        TransactionDate = transaction.TransactionDate,
+                        TransactionDate = transaction.Date,
                         TransactionId = transaction.TransactionId,
                         AccountName = account.AccountName
                     })
@@ -90,7 +90,7 @@ namespace Site.Controllers
                     TransactionAmount = transactionAmount,
                     TransactionType = transaction.TransactionType,
                     AccountId = transaction.SelectedAccount,
-                    TransactionDate = DateTime.Now
+                    Date = DateTime.Now
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
@@ -127,7 +127,7 @@ namespace Site.Controllers
                 Accounts = accounts,
                 TransactionAmount = transaction.TransactionAmount.ToString(),
                 TransactionType = transaction.TransactionType,
-                TransactionDate = transaction.TransactionDate,
+                TransactionDate = transaction.Date,
                 TransactionId = transaction.TransactionId
             };
 
@@ -154,7 +154,7 @@ namespace Site.Controllers
                 {
                     TransactionAmount = transactionAmount,
                     TransactionType = transaction.TransactionType,
-                    TransactionDate = transaction.TransactionDate,
+                    Date = transaction.TransactionDate,
                     TransactionId = transaction.TransactionId
                 };
 
