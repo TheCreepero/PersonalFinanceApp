@@ -23,4 +23,6 @@ public class Account
     public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
     public bool IsMain { get; set; }
+
+    public decimal StartingBalance { get; set; }
 }

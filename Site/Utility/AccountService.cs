@@ -61,5 +61,51 @@ namespace Site.Utility
                 return false;
             }
         }
+
+        public async Task<Dictionary<int, decimal>> GetStartingBalances(DateTime startDate)
+        {
+            var accountBalances = await GetAccountBalances(startDate);
+            var startingBalances = new Dictionary<int, decimal>();
+
+            foreach (var accountBalance in accountBalances)
+            {
+                var account = await _context.Account.FindAsync(accountBalance.Key);
+                var transactions = await _context.Transaction
+                    .Where(t => t.AccountId == accountBalance.Key && t.Date < startDate)
+                    .ToListAsync();
+
+                decimal startingBalance = accountBalance.Value + account.AccountBalance;
+
+                if (transactions.Count() > 0)
+                {
+                    startingBalance += transactions.Sum(t => t.TransactionAmount);
+                }
+
+                startingBalances[accountBalance.Key] = startingBalance;
+            }
+
+            return startingBalances;
+        }
+
+        public async Task<Dictionary<int, decimal>> GetAccountBalances(DateTime startDate)
+        {
+            var accountBalances = new Dictionary<int, decimal>();
+
+            var accounts = await _context.Account.ToListAsync();
+            foreach (var account in accounts)
+            {
+                decimal balance = account.AccountBalance;
+                var transactions = await _context.Transaction
+                    .Where(t => t.AccountId == account.AccountId && t.Date < startDate)
+                    .ToListAsync();
+                foreach (var transaction in transactions)
+                {
+                    balance += transaction.TransactionAmount;
+                }
+                accountBalances[account.AccountId] = balance;
+            }
+
+            return accountBalances;
+        }
     }
 }

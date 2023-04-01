@@ -9,24 +9,59 @@ using Microsoft.EntityFrameworkCore;
 using Site.Data;
 using Site.Models;
 using Site.Models.ViewModels;
+using Site.Utility;
 
 namespace Site.Controllers
 {
     public class MonthsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AccountService _accountService;
 
-        public MonthsController(ApplicationDbContext context)
+        public MonthsController(ApplicationDbContext context, AccountService accountService)
         {
             _context = context;
+            _accountService = accountService;
         }
 
         // GET: Months
         public async Task<IActionResult> Index()
         {
-            return _context.Month != null ?
-                        View(await _context.Month.ToListAsync()) :
-                        Problem("Entity set 'ApplicationDbContext.Month'  is null.");
+            var months = await _context.Month.ToListAsync();
+            var accountBalances = await _accountService.GetAccountBalances(DateTime.MinValue);
+            var startingBalances = await _accountService.GetStartingBalances(DateTime.MinValue);
+
+            var viewModel = new List<IndexMonthViewModel>();
+
+            foreach (var month in months)
+            {
+                var transactions = await _context.Transaction
+                    .Where(t => t.Date.Month == month.StartDate.Month && t.Date.Year == month.StartDate.Year)
+                    .ToListAsync();
+
+                var summaryTable = transactions
+                    .GroupBy(t => t.AccountId)
+                    .Select(g => new MonthViewModel
+                    {
+                        AccountName = _context.Account.Find(g.Key)?.AccountName ?? "Unknown",
+                        StartBalance = startingBalances.ContainsKey(g.Key) ? startingBalances[g.Key] : 0,
+                        TotalSpent = g.Sum(t => t.TransactionAmount),
+                        EndBalance = accountBalances[g.Key]
+                    })
+                    .OrderBy(r => r.AccountName);
+
+                viewModel.Add(new IndexMonthViewModel
+                {
+                    MonthId = month.MonthId,
+                    StartDate = month.StartDate,
+                    EndDate = month.EndDate,
+                    StartBalance = startingBalances.Values.Sum(),
+                    EndBalance = accountBalances.Values.Sum(),
+                    SummaryTable = summaryTable
+                });
+            }
+
+            return View(viewModel);
         }
 
         // GET: Months/Details/5
