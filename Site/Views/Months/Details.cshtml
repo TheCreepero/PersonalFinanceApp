@@ -1,49 +1,59 @@
 ﻿@model Site.Models.ViewModels.MonthTransactionViewModel
 
-<h1>@Model.Month.ToString("MMMM yyyy")</h1>
+<div class="container">
+    <h1 class="mb-4 text-uppercase">@Model.Month.ToString("MMMM yyyy")</h1>
 
-<table class="table table-bordered">
-    <tr>
-        <th>Account Name</th>
-        <th>Beginning Balance</th>
-        <th>Total Spent</th>
-        <th>Ending Balance</th>
-    </tr>
-    @foreach (var item in Model.SummaryTable)
-    {
-        <tr>
-            <td>@item.AccountName</td>
-            <td>@item.BeginningBalance</td>
-            <td>@item.TotalSpent</td>
-            <td>@item.EndingBalance</td>
-        </tr>
-    }
-</table>
-
-@foreach (var account in Model.Transactions.GroupBy(t => t.AccountId))
-{
-    <h2>@Model.AccountNames[account.Key]</h2>
-    <table class="table">
-        <tr>
-            <th>Date</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Running Balance</th>
-        </tr>
-        @{
-            decimal runningBalance = Model.AccountBalances[account.Key];
-        }
-        @foreach (var transaction in account.OrderBy(t => t.Date))
-        {
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@transaction.Date.ToShortDateString()</td>
-                <td>@transaction.TransactionType</td>
-                <td>@transaction.TransactionAmount</td>
-                @{
-                    runningBalance += transaction.TransactionAmount;
-                }
-                <td>@runningBalance</td>
+                <th>Account Name</th>
+                <th>Beginning Balance</th>
+                <th>Total Spent</th>
+                <th>Ending Balance</th>
             </tr>
-        }
+        </thead>
+        <tbody>
+            @foreach (var item in Model.SummaryTable)
+            {
+                <tr>
+                    <td>@item.AccountName</td>
+                    <td>@item.BeginningBalance @ViewData["CurrencySymbol"]</td>
+                    <td>@item.TotalSpent @ViewData["CurrencySymbol"]</td>
+                    <td>@item.EndingBalance @ViewData["CurrencySymbol"]</td>
+                </tr>
+            }
+        </tbody>
     </table>
-}
+
+    @foreach (var account in Model.Transactions.GroupBy(t => t.AccountId))
+    {
+        <h2 class="mt-5">@Model.AccountNames[account.Key]</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Change Since Start</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    decimal runningBalance = 0;
+                }
+                @foreach (var transaction in account.OrderBy(t => t.Date))
+                {
+                    <tr>
+                        <td>@transaction.Date.ToShortDateString()</td>
+                        <td>@transaction.TransactionType</td>
+                        <td>@transaction.TransactionAmount @ViewData["CurrencySymbol"]</td>
+                        @{
+                            runningBalance += transaction.TransactionAmount;
+                        }
+                        <td>@runningBalance @ViewData["CurrencySymbol"]</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Site.Data;
 using Site.Models;
 using Site.Models.ViewModels;
@@ -15,10 +16,12 @@ namespace Site.Controllers
     public class MonthsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly SiteSettings _siteSettings;
 
-        public MonthsController(ApplicationDbContext context)
+        public MonthsController(ApplicationDbContext context, IOptions<SiteSettings> siteSettings)
         {
             _context = context;
+            _siteSettings = siteSettings.Value;
         }
 
         // GET: Months
@@ -30,21 +33,30 @@ namespace Site.Controllers
         }
 
         // GET: Months/Details/5
-        public async Task<IActionResult> Details(int year, int month)
+        public async Task<IActionResult> Details(int year, int month, int day, int? endMonth, int? endDay, int? endYear)
         {
-            var monthDate = new DateTime(year, month, 1);
+            // Create start and end date objects for the given period
+            var monthDate = new DateTime(year, month, day);
+            var endDate = endYear.HasValue && endMonth.HasValue && endDay.HasValue ? new DateTime(endYear.Value, endMonth.Value, endDay.Value) : monthDate.AddMonths(1).AddDays(-1);
 
-            var transactions = _context.Transaction
-                .Where(t => t.Date.Year == year && t.Date.Month == month)
+            // Fetch transactions within the specified period
+            var transactions = await _context.Transaction
+                .Where(t => t.Date >= monthDate && t.Date <= endDate)
                 .OrderBy(t => t.Date)
-                .ToList();
+                .ToListAsync();
 
-            // Load the related Account entities explicitly
+            //Fetch an alternative list of all transactions, to be used in summaryTable creation
+            var allTransactions = await _context.Transaction.ToListAsync();
+
+            // Get distinct account IDs from the transactions
             var accountIds = transactions.Select(t => t.AccountId).Distinct();
-            var accounts = _context.Account
-                .Where(a => accountIds.Contains(a.AccountId))
-                .ToList();
 
+            // Fetch accounts associated with the transactions
+            var accounts = await _context.Account
+                .Where(a => accountIds.Contains(a.AccountId))
+                .ToListAsync();
+
+            // Join transactions and accounts into transaction details
             var transactionDetails = transactions
                 .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
                 {
@@ -53,29 +65,32 @@ namespace Site.Controllers
                 })
                 .ToList();
 
-            // Calculate the account balances for the specified month
-            var accountBalances = accounts.ToDictionary(a => a.AccountId, a => a.AccountBalance);
+            //Alternative transactionDetails containing every transaction
+            var allTransactionDetails = allTransactions
+                .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
+                {
+                    Transaction = t,
+                    Account = a
+                })
+                .ToList();
 
-            var summaryTable = transactionDetails
+            // Create dictionaries for account balances and names
+            var accountBalances = accounts.ToDictionary(a => a.AccountId, a => a.AccountBalance);
+            var accountNames = accounts.ToDictionary(a => a.AccountId, a => a.AccountName);
+
+            // Generate summary table data
+            var summaryTable = allTransactionDetails
                 .GroupBy(td => td.Transaction.AccountId)
                 .Select(g => new AccountSummary
                 {
                     AccountName = g.First().Account.AccountName,
-                    BeginningBalance = accountBalances[g.Key] + g.Where(td => td.Transaction.Date < monthDate).Sum(td => td.Transaction.TransactionAmount),
-                    EndingBalance = accountBalances[g.Key] + g.Where(td => td.Transaction.Date <= monthDate.AddMonths(1).AddDays(-1)).Sum(td => td.Transaction.TransactionAmount),
-                    TotalSpent = g.Where(td => td.Transaction.TransactionAmount < 0).Sum(td => td.Transaction.TransactionAmount) * -1
+                    BeginningBalance = g.Where(td => td.Transaction.Date < monthDate).Sum(td => td.Transaction.TransactionAmount),
+                    EndingBalance = g.Where(td => td.Transaction.Date <= endDate).Sum(td => td.Transaction.TransactionAmount),
+                    TotalSpent = g.Where(td => (td.Transaction.TransactionAmount < 0) && (td.Transaction.Date >= monthDate) && (td.Transaction.Date <= endDate)).Sum(td => td.Transaction.TransactionAmount) * -1
                 })
                 .ToList();
 
-            //var accountBalances = _context.Account.Where(a => accountIds.Contains(a.AccountId)).ToDictionary(a => a.AccountId, a => a.AccountBalance);
-
-            var accountNames = _context.Account.Where(a => accountIds.Contains(a.AccountId)).ToDictionary(a => a.AccountId, a => a.AccountName);
-
-            foreach (var transaction in transactions)
-            {
-                accountBalances[transaction.AccountId] += transaction.TransactionAmount;
-            }
-
+            // Populate the view model
             var viewModel = new MonthTransactionViewModel
             {
                 Month = monthDate,
@@ -85,6 +100,10 @@ namespace Site.Controllers
                 AccountNames = accountNames
             };
 
+            // Set the currency symbol from site settings
+            ViewData["CurrencySymbol"] = _siteSettings.CurrencySymbol;
+
+            // Return the view with the view model
             return View(viewModel);
         }
 
