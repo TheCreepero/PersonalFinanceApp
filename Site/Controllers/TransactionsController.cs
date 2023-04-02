@@ -3,10 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Site.Data;
 using Site.Models;
 using Site.Models.ViewModels;
-using System.Globalization;
-using Site.Controllers;
 using Site.Utility;
-using System.Security.Principal;
+using System.Globalization;
 
 namespace Site.Controllers
 {

@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
 using Site.Data;
 
 namespace Site.Utility
