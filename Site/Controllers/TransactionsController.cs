@@ -34,7 +34,8 @@ namespace Site.Controllers
                         TransactionAmount = transaction.TransactionAmount,
                         TransactionDate = transaction.Date,
                         TransactionId = transaction.TransactionId,
-                        AccountName = account.AccountName
+                        AccountName = account.AccountName,
+                        Type = transaction.Type
                     })
                 .ToListAsync();
 
@@ -63,9 +64,12 @@ namespace Site.Controllers
         public IActionResult Create()
         {
             var accounts = _context.Account.ToList();
+            var types = _context.TransactionTypes.ToList();
+
             var model = new CreateTransactionViewModel
             {
-                Accounts = accounts
+                Accounts = accounts,
+                TransactionTypes = types
             };
             return View(model);
         }
@@ -88,7 +92,8 @@ namespace Site.Controllers
                     TransactionAmount = transactionAmount,
                     TransactionType = transaction.TransactionType,
                     AccountId = transaction.SelectedAccount,
-                    Date = DateTime.Now
+                    Date = DateTime.Now,
+                    Type = transaction.TransactionType
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);

@@ -10,12 +10,24 @@ namespace Site.Models
         public int MonthId { get; set; } // unique identifier for the month
 
         [Required]
+        [Display(
+            Name = "Name",
+            Description = "Custom Name for the Month.",
+            Order = 1)]
         public string MonthName { get; set; } // name of the month (e.g. "January")
 
         [Required]
+        [Display(
+            Name = "Starting Date",
+            Description = "Starting date.",
+            Order = 1)]
         public DateTime StartDate { get; set; } // start date of the month
 
         [Required]
+        [Display(
+            Name = "Ending Date",
+            Description = "Starting date.",
+            Order = 1)]
         public DateTime EndDate { get; set; } // end date of the month
 
         [Required]

@@ -5,50 +5,47 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
+<div class="container">
+    <h1 class="mb-4">Months</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.StartDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartBalance)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndBalance)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartBalance)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndBalance)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.MonthId">Edit</a> |
-                    <a asp-action="Details" asp-route-day="@item.StartDate.Day" asp-route-endYear="@item.EndDate.Year" asp-route-endMonth="@item.EndDate.Month" asp-route-endDay="@item.EndDate.Day" asp-route-month="@item.StartDate.Month" asp-route-year="@item.StartDate.Year">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.MonthId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Create New</a>
+    </p>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.MonthName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.StartDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.EndDate)
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.MonthName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StartDate, "DateOnly")
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EndDate, "DateOnly")
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.MonthId" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Details" asp-route-day="@item.StartDate.Day" asp-route-endYear="@item.EndDate.Year" asp-route-endMonth="@item.EndDate.Month" asp-route-endDay="@item.EndDate.Day" asp-route-month="@item.StartDate.Month" asp-route-year="@item.StartDate.Year" class="btn btn-sm btn-info">Details</a>
+                        <a asp-action="Delete" asp-route-id="@item.MonthId" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

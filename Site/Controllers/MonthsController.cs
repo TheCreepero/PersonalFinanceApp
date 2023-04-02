@@ -39,9 +39,6 @@ namespace Site.Controllers
                 .OrderBy(t => t.Date)
                 .ToListAsync();
 
-            //Fetch an alternative list of all transactions, to be used in summaryTable creation
-            var allTransactions = await _context.Transaction.ToListAsync();
-
             // Get distinct account IDs from the transactions
             var accountIds = transactions.Select(t => t.AccountId).Distinct();
 
@@ -51,38 +48,16 @@ namespace Site.Controllers
                 .ToListAsync();
 
             // Join transactions and accounts into transaction details
-            var transactionDetails = transactions
-                .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
-                {
-                    Transaction = t,
-                    Account = a
-                })
-                .ToList();
-
-            //Alternative transactionDetails containing every transaction
-            var allTransactionDetails = allTransactions
-                .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
-                {
-                    Transaction = t,
-                    Account = a
-                })
-                .ToList();
+            var transactionDetails = JoinTransactionsAndAccounts(transactions, accounts);
+            var allTransactions = await _context.Transaction.ToListAsync();
+            var allTransactionDetails = JoinTransactionsAndAccounts(allTransactions, accounts);
 
             // Create dictionaries for account balances and names
             var accountBalances = accounts.ToDictionary(a => a.AccountId, a => a.AccountBalance);
             var accountNames = accounts.ToDictionary(a => a.AccountId, a => a.AccountName);
 
             // Generate summary table data
-            var summaryTable = allTransactionDetails
-                .GroupBy(td => td.Transaction.AccountId)
-                .Select(g => new AccountSummary
-                {
-                    AccountName = g.First().Account.AccountName,
-                    BeginningBalance = g.Where(td => td.Transaction.Date < monthDate).Sum(td => td.Transaction.TransactionAmount),
-                    EndingBalance = g.Where(td => td.Transaction.Date <= endDate).Sum(td => td.Transaction.TransactionAmount),
-                    TotalSpent = g.Where(td => (td.Transaction.TransactionAmount < 0) && (td.Transaction.Date >= monthDate) && (td.Transaction.Date <= endDate)).Sum(td => td.Transaction.TransactionAmount) * -1
-                })
-                .ToList();
+            var summaryTable = GenerateSummaryTable(allTransactionDetails, monthDate, endDate);
 
             // Populate the view model
             var viewModel = new MonthTransactionViewModel
@@ -214,6 +189,31 @@ namespace Site.Controllers
         private bool MonthExists(int id)
         {
             return (_context.Month?.Any(e => e.MonthId == id)).GetValueOrDefault();
+        }
+
+        private List<TransactionDetail> JoinTransactionsAndAccounts(List<Transaction> transactions, List<Account> accounts)
+        {
+            return transactions
+                .Join(accounts, t => t.AccountId, a => a.AccountId, (t, a) => new TransactionDetail
+                {
+                    Transaction = t,
+                    Account = a
+                })
+                .ToList();
+        }
+
+        private List<AccountSummary> GenerateSummaryTable(List<TransactionDetail> transactionDetails, DateTime? startDate, DateTime? endDate)
+        {
+            return transactionDetails
+                            .GroupBy(td => td.Transaction.AccountId)
+                            .Select(g => new AccountSummary
+                            {
+                                AccountName = g.First().Account.AccountName,
+                                BeginningBalance = g.Where(td => td.Transaction.Date < startDate).Sum(td => td.Transaction.TransactionAmount),
+                                EndingBalance = g.Where(td => td.Transaction.Date <= endDate).Sum(td => td.Transaction.TransactionAmount),
+                                TotalSpent = g.Where(td => (td.Transaction.TransactionAmount < 0) && (td.Transaction.Date >= startDate) && (td.Transaction.Date <= endDate)).Sum(td => td.Transaction.TransactionAmount) * -1
+                            })
+                            .ToList();
         }
     }
 }

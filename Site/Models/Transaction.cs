@@ -12,8 +12,8 @@ namespace Site.Models
 
         [Required]
         [Display(
-            Name = "Transaction Type",
-            Description = "Type of the transaction.",
+            Name = "Name",
+            Description = "Name of the transaction.",
             Order = 1)]
         public string TransactionType { get; set; }
 
@@ -32,6 +32,12 @@ namespace Site.Models
             Description = "Account the transaction was made to/from.",
             Order = 1)]
         public int AccountId { get; set; }
+
+        [Display(
+            Name = "Type",
+            Description = "Type of the transaction.",
+            Order = 1)]
+        public string Type { get; set; }
 
         public DateTime Date { get; set; }
     }

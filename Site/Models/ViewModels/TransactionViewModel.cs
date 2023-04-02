@@ -46,7 +46,11 @@ namespace Site.Models.ViewModels
 
         public int SelectedAccount { get; set; }
 
+        public string SelectedType { get; set; }
+
         public List<Account> Accounts { get; set; } = new List<Account>();
+
+        public List<TransactionTypes> TransactionTypes { get; set; } = new List<TransactionTypes>();
     }
 
     public class IndexTransactionViewModel
@@ -80,5 +84,11 @@ namespace Site.Models.ViewModels
             Description = "Account the transaction was made to/from.",
             Order = 2)]
         public string AccountName { get; set; }
+
+        [Display(
+            Name = "Type",
+            Description = "Type of the transaction.",
+            Order = 1)]
+        public string Type { get; set; }
     }
 }
