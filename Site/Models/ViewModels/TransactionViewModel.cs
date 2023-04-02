@@ -7,8 +7,8 @@ namespace Site.Models.ViewModels
     {
         [Required]
         [Display(
-            Name = "Transaction Type",
-            Description = "Type of the transaction.",
+            Name = "Transaction Name",
+            Description = "Name of the transaction.",
             Order = 1)]
         public string TransactionType { get; set; }
 
