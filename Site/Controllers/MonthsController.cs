@@ -87,8 +87,10 @@ namespace Site.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MonthId,MonthName,StartDate,EndDate,StartBalance,EndBalance")] Month month)
+        public async Task<IActionResult> Create([Bind("MonthId,MonthName,StartDate,EndDate")] Month month)
         {
+            month.StartBalance = 0;
+            month.EndBalance = 0;
             if (ModelState.IsValid)
             {
                 _context.Add(month);

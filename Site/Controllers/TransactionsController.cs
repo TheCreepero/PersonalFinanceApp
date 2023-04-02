@@ -30,7 +30,7 @@ namespace Site.Controllers
                     account => account.AccountId,
                     (transaction, account) => new IndexTransactionViewModel
                     {
-                        TransactionType = transaction.TransactionType,
+                        TransactionName = transaction.TransactionType,
                         TransactionAmount = transaction.TransactionAmount,
                         TransactionDate = transaction.Date,
                         TransactionId = transaction.TransactionId,
@@ -90,10 +90,10 @@ namespace Site.Controllers
                 var model = new Transaction
                 {
                     TransactionAmount = transactionAmount,
-                    TransactionType = transaction.TransactionType,
+                    TransactionType = transaction.TransactionName,
                     AccountId = transaction.SelectedAccount,
                     Date = DateTime.Now,
-                    Type = transaction.TransactionType
+                    Type = transaction.TransactionName
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
@@ -129,7 +129,7 @@ namespace Site.Controllers
             {
                 Accounts = accounts,
                 TransactionAmount = transaction.TransactionAmount.ToString(),
-                TransactionType = transaction.TransactionType,
+                TransactionName = transaction.TransactionType,
                 TransactionDate = transaction.Date,
                 TransactionId = transaction.TransactionId
             };
@@ -156,7 +156,7 @@ namespace Site.Controllers
                 var model = new Transaction
                 {
                     TransactionAmount = transactionAmount,
-                    TransactionType = transaction.TransactionType,
+                    TransactionType = transaction.TransactionName,
                     Date = transaction.TransactionDate,
                     TransactionId = transaction.TransactionId
                 };

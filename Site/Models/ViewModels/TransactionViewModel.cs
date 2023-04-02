@@ -10,7 +10,7 @@ namespace Site.Models.ViewModels
             Name = "Transaction Name",
             Description = "Name of the transaction.",
             Order = 1)]
-        public string TransactionType { get; set; }
+        public string TransactionName { get; set; }
 
         [Required]
         [Display(
@@ -32,10 +32,10 @@ namespace Site.Models.ViewModels
     {
         [Required]
         [Display(
-            Name = "Transaction Type",
-            Description = "Type of the transaction.",
+            Name = "Name",
+            Description = "Name of the transaction.",
             Order = 1)]
-        public string TransactionType { get; set; }
+        public string TransactionName { get; set; }
 
         [Required]
         [Display(
@@ -44,8 +44,16 @@ namespace Site.Models.ViewModels
             Order = 2)]
         public string TransactionAmount { get; set; }
 
+        [Display(
+            Name = "Account",
+            Description = "Account the transaction is made to/from.",
+            Order = 1)]
         public int SelectedAccount { get; set; }
 
+        [Display(
+            Name = "Category",
+            Description = "Type of the transaction.",
+            Order = 1)]
         public string SelectedType { get; set; }
 
         public List<Account> Accounts { get; set; } = new List<Account>();
@@ -60,7 +68,7 @@ namespace Site.Models.ViewModels
             Name = "Name",
             Description = "Name of the transaction.",
             Order = 1)]
-        public string TransactionType { get; set; }
+        public string TransactionName { get; set; }
 
         [Required]
         [Display(
