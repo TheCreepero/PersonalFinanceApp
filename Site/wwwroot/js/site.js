@@ -3,6 +3,6 @@
 
 // Write your JavaScript code.
 $(document).ready(function () {
-    $('#sortTable').DataTable();
+    $('.sort-table').DataTable();
     $('.dataTables_length').addClass('bs-select');
 });

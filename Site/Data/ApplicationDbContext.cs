@@ -15,5 +15,6 @@ namespace Site.Data
         public DbSet<Site.Models.Transaction>? Transaction { get; set; }
         public DbSet<Site.Models.Month>? Month { get; set; }
         public DbSet<Site.Models.TransactionTypes>? TransactionTypes { get; set; }
+        public DbSet<Site.Models.Budget>? Budget { get; set; }
     }
 }

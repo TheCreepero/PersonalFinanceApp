@@ -24,6 +24,34 @@ body {
     background-color: @background-softGray;
 }
 
+.navbar {
+    .navbar-brand {
+        &::before {
+            margin: 0 5px;
+        }
+    }
+
+    .nav-link {
+        &::before {
+            margin: 0 5px;
+        }
+
+        &::after {
+            vertical-align: 0.17em;
+        }
+    }
+
+    .nav-form-button {
+        padding: 0;
+    }
+
+    .nav-profile-menu-item {
+        height: 2.3rem;
+    }
+}
+
+
+
 .flex-grid {
     display: flex;
     gap: 20px;

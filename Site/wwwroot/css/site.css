@@ -17,6 +17,21 @@ body {
   margin-bottom: 60px;
   background-color: #F5F5F5;
 }
+.navbar .navbar-brand::before {
+  margin: 0 5px;
+}
+.navbar .nav-link::before {
+  margin: 0 5px;
+}
+.navbar .nav-link::after {
+  vertical-align: 0.17em;
+}
+.navbar .nav-form-button {
+  padding: 0;
+}
+.navbar .nav-profile-menu-item {
+  height: 2.3rem;
+}
 .flex-grid {
   display: flex;
   gap: 20px;

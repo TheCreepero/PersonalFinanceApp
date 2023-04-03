@@ -84,7 +84,13 @@ namespace Site.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateTransactionViewModel transaction)
         {
-            var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.SelectedAccount);
+            // Fetch account and transaction type asynchronously
+            var accountTask = _context.Account.FirstOrDefaultAsync(x => x.AccountId == transaction.SelectedAccount);
+            var transactionTypeTask = _context.TransactionTypes.FirstOrDefaultAsync(x => x.Id == transaction.SelectedType);
+
+            // Wait for tasks to complete
+            var account = await accountTask;
+            var transactionType = await transactionTypeTask;
 
             decimal transactionAmount;
 
@@ -96,7 +102,7 @@ namespace Site.Controllers
                     TransactionType = transaction.TransactionName,
                     AccountId = transaction.SelectedAccount,
                     Date = DateTime.Now,
-                    Type = _context.TransactionTypes.FirstOrDefault(x => x.Id == transaction.SelectedType).Name
+                    Type = transactionType.Name
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
