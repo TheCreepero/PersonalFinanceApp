@@ -23,20 +23,19 @@ namespace Site.Controllers
         // GET: Accounts
         public async Task<IActionResult> Index()
         {
-            var accountService = new AccountService(_context);
-            await accountService.CalculateAccountBalance();
+            await _accountService.CalculateAccountBalance();
 
             ViewData["CurrencySymbol"] = _siteSettings.CurrencySymbol;
 
             return _context.Account != null ?
                         View(await _context.Account.ToListAsync()) :
-                        Problem("Entity set 'ApplicationDbContext.Account'  is null.");
+                        NotFound();
         }
 
         // GET: Accounts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null || _context.Account == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -78,7 +77,7 @@ namespace Site.Controllers
         // GET: Accounts/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Account == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -112,7 +111,7 @@ namespace Site.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AccountExists(account.AccountId))
+                    if (!(_context.Account.Any(e => e.AccountId == id)))
                     {
                         return NotFound();
                     }
@@ -129,7 +128,7 @@ namespace Site.Controllers
         // GET: Accounts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.Account == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -161,11 +160,6 @@ namespace Site.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool AccountExists(int id)
-        {
-            return (_context.Account?.Any(e => e.AccountId == id)).GetValueOrDefault();
         }
     }
 }

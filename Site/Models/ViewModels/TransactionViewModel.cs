@@ -23,6 +23,12 @@ namespace Site.Models.ViewModels
 
         public int SelectedAccount { get; set; }
 
+        [Display(
+            Name = "Category",
+            Description = "Type of the transaction.",
+            Order = 1)]
+        public int SelectedType { get; set; }
+
         public List<Account> Accounts { get; set; } = new List<Account>();
 
         public DateTime TransactionDate { get; set; }
@@ -54,7 +60,7 @@ namespace Site.Models.ViewModels
             Name = "Category",
             Description = "Type of the transaction.",
             Order = 1)]
-        public string SelectedType { get; set; }
+        public int SelectedType { get; set; }
 
         public List<Account> Accounts { get; set; } = new List<Account>();
 

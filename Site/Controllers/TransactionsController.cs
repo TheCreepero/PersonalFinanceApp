@@ -15,6 +15,11 @@ namespace Site.Controllers
 
         private CultureInfo culture = new CultureInfo("fi-FI");
 
+        private NumberFormatInfo customFormat = new NumberFormatInfo
+        {
+            NumberDecimalSeparator = ","
+        };
+
         public TransactionsController(ApplicationDbContext context, AccountService accountService)
         {
             _context = context;
@@ -45,7 +50,7 @@ namespace Site.Controllers
         // GET: Transactions/Details/5
         public async Task<IActionResult> Details(string id)
         {
-            if (id == null || _context.Transaction == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -63,13 +68,11 @@ namespace Site.Controllers
         // GET: Transactions/Create
         public IActionResult Create()
         {
-            var accounts = _context.Account.ToList();
-            var types = _context.TransactionTypes.ToList();
+            ViewBag.Accounts = _context.Account.ToList();
+            ViewBag.TransactionTypes = _context.TransactionTypes.ToList();
 
             var model = new CreateTransactionViewModel
             {
-                Accounts = accounts,
-                TransactionTypes = types
             };
             return View(model);
         }
@@ -85,7 +88,7 @@ namespace Site.Controllers
 
             decimal transactionAmount;
 
-            if (decimal.TryParse(transaction.TransactionAmount.Replace('.', ','), NumberStyles.Any, culture, out transactionAmount))
+            if (decimal.TryParse(transaction.TransactionAmount.Replace('.', ','), NumberStyles.Any, customFormat, out transactionAmount))
             {
                 var model = new Transaction
                 {
@@ -93,7 +96,7 @@ namespace Site.Controllers
                     TransactionType = transaction.TransactionName,
                     AccountId = transaction.SelectedAccount,
                     Date = DateTime.Now,
-                    Type = transaction.TransactionName
+                    Type = _context.TransactionTypes.FirstOrDefault(x => x.Id == transaction.SelectedType).Name
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
@@ -112,7 +115,7 @@ namespace Site.Controllers
         // GET: Transactions/Edit/5
         public async Task<IActionResult> Edit(string id)
         {
-            if (id == null || _context.Transaction == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -124,16 +127,16 @@ namespace Site.Controllers
                 return NotFound();
             }
 
-            var accounts = _context.Account.ToList();
             var model = new TransactionViewModel
             {
-                Accounts = accounts,
                 TransactionAmount = transaction.TransactionAmount.ToString(),
                 TransactionName = transaction.TransactionType,
                 TransactionDate = transaction.Date,
                 TransactionId = transaction.TransactionId
             };
 
+            ViewBag.Accounts = _context.Account.ToList();
+            ViewBag.TransactionTypes = _context.TransactionTypes.ToList();
             return View(model);
         }
 
@@ -148,17 +151,19 @@ namespace Site.Controllers
             {
                 return NotFound();
             }
-            var account = _context.Account.FirstOrDefault(x => x.AccountId == transaction.SelectedAccount);
+            var account = await _context.Account.FirstOrDefaultAsync(x => x.AccountId == transaction.SelectedAccount);
 
             decimal transactionAmount;
-            if (decimal.TryParse(transaction.TransactionAmount.Replace('.', ','), NumberStyles.Any, culture, out transactionAmount))
+            if (decimal.TryParse(transaction.TransactionAmount, NumberStyles.Any, customFormat, out transactionAmount))
             {
                 var model = new Transaction
                 {
                     TransactionAmount = transactionAmount,
                     TransactionType = transaction.TransactionName,
                     Date = transaction.TransactionDate,
-                    TransactionId = transaction.TransactionId
+                    TransactionId = transaction.TransactionId,
+                    AccountId = transaction.SelectedAccount,
+                    Type = _context.TransactionTypes.FirstOrDefault(x => x.Id == transaction.SelectedType).Name
                 };
 
                 bool balanceUpdated = await _accountService.UpdateAccountBalance(account.AccountId, transactionAmount);
@@ -190,7 +195,7 @@ namespace Site.Controllers
         // GET: Transactions/Delete/5
         public async Task<IActionResult> Delete(string id)
         {
-            if (id == null || _context.Transaction == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -210,10 +215,6 @@ namespace Site.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            if (_context.Transaction == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Transaction'  is null.");
-            }
             var transaction = await _context.Transaction.FindAsync(id);
             if (transaction != null)
             {
